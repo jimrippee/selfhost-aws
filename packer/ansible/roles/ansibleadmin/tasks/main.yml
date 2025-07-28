@@ -1,0 +1,43 @@
+---
+- name: Ensure ansibleadmin user exists
+  user:
+    name: ansibleadmin
+    shell: /bin/bash
+    groups: sudo
+    append: yes
+    create_home: yes
+
+- name: Ensure .ssh directory exists
+  file:
+    path: /home/ansibleadmin/.ssh
+    state: directory
+    owner: ansibleadmin
+    group: ansibleadmin
+    mode: '0700'
+
+- name: Add authorized SSH key
+  copy:
+    src: id_rsa.pub
+    dest: /home/ansibleadmin/.ssh/authorized_keys
+    owner: ansibleadmin
+    group: ansibleadmin
+    mode: '0600'
+
+- name: Set up sudoers file
+  copy:
+    src: sudoers_ansibleadmin.j2
+    dest: /etc/sudoers.d/ansibleadmin
+    mode: '0440'
+
+- name: Ensure SSH password login is disabled (optional hardening)
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^PasswordAuthentication'
+    line: 'PasswordAuthentication no'
+    state: present
+  notify: Restart SSH
+
+- name: Restart SSH
+  service:
+    name: ssh
+    state: restarted
