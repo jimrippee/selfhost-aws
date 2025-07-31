@@ -3,10 +3,27 @@
   hosts: all
   become: true
   vars:
-    vector_keyring_path: /usr/share/keyrings/datadog-archive-keyring.gpg
+    keyring_path: /etc/apt/keyrings
+    vector_keyring_path: "{{ keyring_path }}/datadog-archive-keyring.gpg"
     vector_install_script_url: https://s3.amazonaws.com/dd-agent/scripts/install_script_vector0.sh
 
   tasks:
+
+    - name: Ensure keyrings directory exists
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Ensure dependencies for HTTPS repositories are present
+      ansible.builtin.apt:
+        name:
+          - curl
+          - gnupg
+          - ca-certificates
+          - lsb-release
+        state: present
+        update_cache: yes
 
     - name: Check if Vector GPG keyring is already installed
       stat:
@@ -46,3 +63,38 @@
     - name: Show installed Vector version
       debug:
         msg: "Installed Vector version: {{ vector_version_output.stdout }}"
+
+
+
+    - name: Check if Tailscale GPG key is already installed
+      ansible.builtin.stat:
+        path: /etc/apt/keyrings/tailscale-archive-keyring.gpg
+      register: tailscale_keyring
+
+    - name: Download Tailscale GPG key
+      ansible.builtin.get_url:
+        url: https://pkgs.tailscale.com/stable/debian/bookworm.noarmor.gpg
+        dest: "{{ keyring_path }}/tailscale-archive-keyring.gpg"
+        mode: '0644'
+        force: false
+      when: not tailscale_keyring.stat.exists
+
+    - name: Add Tailscale APT repository
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/etc/apt/keyrings/tailscale-archive-keyring.gpg arch=amd64] https://pkgs.tailscale.com/stable/debian bookworm main"
+        state: present
+        filename: tailscale
+        update_cache: yes
+
+    - name: Install Tailscale
+      ansible.builtin.apt:
+        name: tailscale
+        state: present
+        update_cache: yes
+
+    - name: Enable and start tailscaled
+      ansible.builtin.systemd:
+        name: tailscaled
+        enabled: yes
+        state: started
+
