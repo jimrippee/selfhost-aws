@@ -1,4 +1,48 @@
-- hosts: all
-  become: yes
-  roles:
-    - ansibleadmin
+---
+- name: Install Vector on Debian-based systems
+  hosts: all
+  become: true
+  vars:
+    vector_keyring_path: /usr/share/keyrings/datadog-archive-keyring.gpg
+    vector_install_script_url: https://s3.amazonaws.com/dd-agent/scripts/install_script_vector0.sh
+
+  tasks:
+
+    - name: Check if Vector GPG keyring is already installed
+      stat:
+        path: "{{ vector_keyring_path }}"
+      register: vector_keyring
+
+    - name: Download Vector install script to temp path
+      get_url:
+        url: "{{ vector_install_script_url }}"
+        dest: /tmp/vector_install.sh
+        mode: '0755'
+      when: not vector_keyring.stat.exists
+
+    - name: Run the Vector install script
+      command: /bin/bash /tmp/vector_install.sh
+      when: not vector_keyring.stat.exists
+
+    - name: Remove the Vector install script
+      file:
+        path: /tmp/vector_install.sh
+        state: absent
+      when: not vector_keyring.stat.exists
+
+    - name: Install Vector package
+      apt:
+        name: vector
+        state: present
+        update_cache: yes
+      when: not vector_keyring.stat.exists
+
+    - name: Confirm Vector CLI is available
+      command: vector --version
+      register: vector_version_output
+      changed_when: false
+      failed_when: vector_version_output.rc != 0
+
+    - name: Show installed Vector version
+      debug:
+        msg: "Installed Vector version: {{ vector_version_output.stdout }}"

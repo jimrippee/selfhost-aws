@@ -11,22 +11,36 @@ packer {
   }
 }
 
-variable "region" {
-  type    = string
+variable "aws_region" {
   default = "us-west-1"
 }
 
+variable "ssh_keypair_name" {
+  default = "selfhost-key"
+}
+
+variable "private_key_file" {
+  default = "/Users/rippee/.ssh/selfhost-key"
+}
+
 variable "aws_profile" {
-  default = "selfhost-github" # Your named AWS CLI profile
+  description = "AWS CLI profile to use"
+  default     = "selfhost-github"
 }
 
 
 source "amazon-ebs" "debian" {
-  region                  = var.region
-  instance_type           = "t3a.micro"
-  ami_name                = "debian12-selfhost-{{timestamp}}"
-  ami_description         = "Debian 12 AMI with Docker, Vector, Tailscale, Watchtower, etc."
-  ssh_pty                 = true
+  ami_name                    = "debian12-with-selfhost-tools-{{timestamp}}"
+  instance_type               = "t3a.small"
+  profile                     = var.aws_profile
+  region                      = var.aws_region
+  ssh_username                = "admin"
+  ssh_keypair_name            = var.ssh_keypair_name
+  ssh_private_key_file        = var.private_key_file
+  ssh_interface               = "public_ip"
+  ssh_pty                     = true
+  associate_public_ip_address = true
+  iam_instance_profile        = "selfhost-ec2-ssm-role"
 
   source_ami_filter {
     filters = {
@@ -34,36 +48,34 @@ source "amazon-ebs" "debian" {
       virtualization-type = "hvm"
       root-device-type    = "ebs"
     }
-    owners      = ["136693071363"]  # Debian official AMIs
+    owners      = ["136693071363"]
     most_recent = true
   }
 
-  ssh_username              = "admin" # or "debian" depending on the AMI
-  ssh_keypair_name          = "selfhost-key"
-  ssh_private_key_file      = "/Users/rippee/.ssh/selfhost-key"
-
   launch_block_device_mappings {
-    device_name = "/dev/sda1"
-    volume_size = 20
-    volume_type = "gp3"
+    device_name           = "/dev/xvda"
+    volume_size           = 16
+    volume_type           = "gp3"
     delete_on_termination = true
   }
 
-  iam_instance_profile = "selfhost-ec2-ssm-role" # Assumes this profile exists
-  associate_public_ip_address = true
+  tags = {
+    Name        = "debian12-with-selfhost-tools"
+    Environment = "selfhost"
+  }
 }
 
 build {
-  name    = "debian12-with-selfhost-tools"
   sources = ["source.amazon-ebs.debian"]
 
-
-  provisioner "ansible" {
-    playbook_file = "./ansible/playbook.yml"
-    extra_arguments = [
-      "-e", "ansible_python_interpreter=/usr/bin/python3",
-      "-c", "scp"
-    ]
+#https://github.com/ansible/workshops/blob/devel/provisioner/packer/automationhub.pkr.hcl
+provisioner "ansible" {
+  command = "ansible-playbook"
+  playbook_file = "./ansible/playbook.yml"
+  user = "admin"
+  inventory_file_template = "hub ansible_host={{ .Host }} ansible_user={{ .User }} ansible_port={{ .Port }}\n"
+  use_proxy = false
+  }
 }
 
-}
+

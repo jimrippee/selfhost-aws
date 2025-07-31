@@ -17,7 +17,7 @@
 
 - name: Add authorized SSH key
   copy:
-    src: id_rsa.pub
+    src: /Users/rippee/Documents/dev/selfhost-aws/packer/ansible/roles/ansibleadmin/files/id_ed25519.pub
     dest: /home/ansibleadmin/.ssh/authorized_keys
     owner: ansibleadmin
     group: ansibleadmin
@@ -25,7 +25,7 @@
 
 - name: Set up sudoers file
   copy:
-    src: sudoers_ansibleadmin.j2
+    src:  /Users/rippee/Documents/dev/selfhost-aws/packer/ansible/roles/ansibleadmin/templates/sudoers_ansibleadmin.j2
     dest: /etc/sudoers.d/ansibleadmin
     mode: '0440'
 
