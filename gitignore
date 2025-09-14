@@ -1,0 +1,106 @@
+# -----------------------------------------------------------------------------
+# General system files
+# -----------------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+Desktop.ini
+
+# -----------------------------------------------------------------------------
+# Python / Pip / Virtualenv
+# -----------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+.venv/
+*.egg
+*.egg-info/
+
+# -----------------------------------------------------------------------------
+# Node / npm / yarn
+# -----------------------------------------------------------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# -----------------------------------------------------------------------------
+# Docker and Compose
+# -----------------------------------------------------------------------------
+*.tar
+*.img
+*.log
+*.pid
+*.sock
+
+# Docker-related build files
+docker-compose.override.yml
+docker-compose*.local.yml
+docker-compose*.dev.yml
+Dockerfile.*
+
+# -----------------------------------------------------------------------------
+# Secret files
+# -----------------------------------------------------------------------------
+.env
+.env.*
+secrets/
+*.key
+*.pem
+*.crt
+*.csr
+*.pfx
+*.jks
+*.gpg
+*.asc
+*.enc
+*.bak
+*.old
+
+# -----------------------------------------------------------------------------
+# Backup and temp files
+# -----------------------------------------------------------------------------
+*.bak
+*.tmp
+*.swp
+*.swo
+*.~*
+*.orig
+*~
+*#
+
+# VSCode / IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# -----------------------------------------------------------------------------
+# Authelia specific
+# -----------------------------------------------------------------------------
+config/authelia/users_database.yml
+config/authelia/secrets/
+config/authelia/*.key
+config/authelia/*.pem
+config/authelia/*.jks
+
+# -----------------------------------------------------------------------------
+# Vaultwarden specific
+# -----------------------------------------------------------------------------
+vw-data/
+vw-backup/
+vw-db/*.db
+vw-db/*.json
+vw-db/*.sqlite
+vw-db/*.sqlite3
+vw-db/*.bak
+vw-db/*.db-wal
+vw-db/*.db-shm
+
+# Explicitly include .env.example (override the rule above)
