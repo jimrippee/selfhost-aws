@@ -104,3 +104,4 @@ vw-db/*.db-wal
 vw-db/*.db-shm
 
 # Explicitly include .env.example (override the rule above)
+!.env.example
